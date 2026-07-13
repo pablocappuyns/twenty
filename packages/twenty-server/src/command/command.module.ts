@@ -4,6 +4,7 @@ import { AppModule } from 'src/app.module';
 import { DatabaseCommandModule } from 'src/database/commands/database-command.module';
 import { FieldMetadataModule } from 'src/engine/metadata-modules/field-metadata/field-metadata.module';
 import { ObjectMetadataModule } from 'src/engine/metadata-modules/object-metadata/object-metadata.module';
+import { KernelLegalCommandModule } from 'src/modules/kernel-legal/commands/kernel-legal-command.module';
 import { WorkspaceCleanerModule } from 'src/engine/workspace-manager/workspace-cleaner/workspace-cleaner.module';
 import { MessagingMessageCleanerModule } from 'src/modules/messaging/message-cleaner/messaging-message-cleaner.module';
 
@@ -15,6 +16,7 @@ import { MessagingMessageCleanerModule } from 'src/modules/messaging/message-cle
     ObjectMetadataModule,
     FieldMetadataModule,
     WorkspaceCleanerModule,
+    KernelLegalCommandModule,
   ],
 })
 export class CommandModule {}
