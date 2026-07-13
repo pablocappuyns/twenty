@@ -51,13 +51,17 @@ export class FileStorageService {
     fileFolder: FileFolder;
     relativePath: string;
   }): { onStoragePath: string; resourcePath: string } {
-    const resourcePath = join(fileFolder, relativePath).replace(/\/+/g, '/');
+    const resourcePath = join(fileFolder, relativePath)
+      .replace(/\\/g, '/')
+      .replace(/\/+/g, '/');
 
     const onStoragePath = join(
       workspaceId,
       applicationUniversalIdentifier,
       resourcePath,
-    ).replace(/\/+/g, '/');
+    )
+      .replace(/\\/g, '/')
+      .replace(/\/+/g, '/');
 
     validateStoragePathIsWithinWorkspaceOrThrow({
       onStoragePath,

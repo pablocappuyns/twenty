@@ -8,6 +8,7 @@ import { WorkspaceQueryHookService } from 'src/engine/api/graphql/workspace-quer
 import { BlocklistQueryHookModule } from 'src/modules/blocklist/query-hooks/blocklist-query-hook.module';
 import { CalendarQueryHookModule } from 'src/modules/calendar/common/query-hooks/calendar-query-hook.module';
 import { DashboardQueryHookModule } from 'src/modules/dashboard/query-hooks/dashboard-query-hook.module';
+import { KernelLegalQueryHookModule } from 'src/modules/kernel-legal/query-hooks/kernel-legal-query-hook.module';
 import { MessagingQueryHookModule } from 'src/modules/messaging/common/query-hooks/messaging-query-hook.module';
 import { NoteQueryHookModule } from 'src/modules/note/query-hooks/note-query-hook.module';
 import { TaskQueryHookModule } from 'src/modules/task/query-hooks/task-query-hook.module';
@@ -18,6 +19,7 @@ import { WorkspaceMemberQueryHookModule } from 'src/modules/workspace-member/que
     MessagingQueryHookModule,
     CalendarQueryHookModule,
     DashboardQueryHookModule,
+    KernelLegalQueryHookModule,
     BlocklistQueryHookModule,
     WorkspaceMemberQueryHookModule,
     NoteQueryHookModule,
