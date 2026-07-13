@@ -287,9 +287,21 @@ ENV PG_DATABASE_URL=postgres://twenty:twenty@localhost:5432/default \
     APPLICATION_LOG_DRIVER=CONSOLE
 
 EXPOSE 2020
-VOLUME ["/data/postgres", "/app/packages/twenty-server/.local-storage"]
+# VOLUME removed for Railway (Dockerfile VOLUME unsupported; use Railway Volumes instead)
+# VOLUME ["/data/postgres", "/app/packages/twenty-server/.local-storage"]
 
 LABEL org.opencontainers.image.source=https://github.com/twentyhq/twenty
 LABEL org.opencontainers.image.description="All-in-one Twenty image for local development and SDK usage. Includes PostgreSQL, Redis, server, and worker."
 
 ENTRYPOINT ["/init"]
+
+
+# ===========================================================================
+# Target: railway-default (Kernel Legal)
+#   Last stage in the file, so it is what Railway builds by default.
+#   Selects the server+frontend image (external Postgres/Redis), NOT the
+#   all-in-one dev image. Depends only on `twenty`, so BuildKit skips the
+#   Postgres/Redis/s6 stages entirely.
+# ===========================================================================
+
+FROM twenty AS railway-default
