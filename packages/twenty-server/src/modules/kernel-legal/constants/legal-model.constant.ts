@@ -106,6 +106,76 @@ const REFERRER_TYPE = options(['CLIENTE', 'TRABAJADOR', 'EXTERNO']);
 
 const PROPOSAL_STATUS = options(['PENDIENTE', 'APROBADO', 'RECHAZADO']);
 
+const VISIT_MODALITY = options(['PRESENCIAL', 'TELEFONICA', 'TELEMATICA']);
+
+const ABSENCE_TYPE = options([
+  'VACACIONES',
+  'BAJA',
+  'PERMISO',
+  'SATURACION',
+  'NO_DISPONIBLE',
+]);
+
+const NOTIFICATION_CHANNEL = options(['PUSH', 'EMAIL', 'SMS']);
+
+const EMAIL_KIND = options([
+  'PREVISITA',
+  'SEGUIMIENTO',
+  'RECORDATORIO',
+  'SOLICITUD_DOCUMENTACION',
+]);
+
+const TRANSCRIPTION_SOURCE = options([
+  'TEAMS',
+  'AUDIO_PRESENCIAL',
+  'UPLOAD_MANUAL',
+]);
+
+const VISIT_RESULT = options([
+  'HOJA_FIRMADA_PAGADA',
+  'HOJA_FIRMADA_PENDIENTE_PAGO',
+  'PENDIENTE_ACEPTACION_PRESUPUESTO',
+  'PENDIENTE_DOCUMENTACION_VIABILIDAD',
+  'CIERRE_REMISION',
+]);
+
+const CIERRE_CAUSA = options([
+  'ABOGADO_OFICIO',
+  'ANTIECONOMICO',
+  'RENUNCIA_COSTE',
+  'NO_VIABILIDAD',
+  'ILOCALIZABLE',
+]);
+
+const AI_ROLE = options(['USER', 'ASSISTANT']);
+
+const FEE_TYPE = options(['FIJO', 'VARIABLE', 'MIXTO']);
+
+const BUDGET_STATUS = options([
+  'BORRADOR',
+  'PENDIENTE_VALIDACION',
+  'VALIDADO',
+  'RECHAZADO_VALIDADOR',
+  'ENVIADO',
+  'ACEPTADO',
+  'RECHAZADO_CLIENTE',
+  'CADUCADO',
+]);
+
+const FOLLOWUP_KIND = options([
+  'EMAIL',
+  'LLAMADA',
+  'RECORDATORIO',
+  'OBJECION',
+]);
+
+const METRIC_KEY = options([
+  'CONV_LEAD_VISITA',
+  'CONV_VISITA_PRESUPUESTO',
+  'VELOCIDAD_RESPUESTA',
+  'LEADS_POR_CANAL',
+]);
+
 export const KERNEL_LEGAL_OBJECTS: LegalObjectDefinition[] = [
   {
     nameSingular: 'appConfig',
@@ -229,6 +299,312 @@ export const KERNEL_LEGAL_OBJECTS: LegalObjectDefinition[] = [
       { name: 'aiConfidence', label: 'Confianza IA', type: FieldMetadataType.NUMBER, isNullable: true },
       { name: 'rawSnippet', label: 'Extracto original', type: FieldMetadataType.TEXT, isNullable: true },
       { name: 'proposalStatus', label: 'Estado', type: FieldMetadataType.SELECT, options: PROPOSAL_STATUS, isNullable: true },
+    ],
+  },
+
+  // ── F2: agenda, tareas, notificaciones ──────────────────────────────────
+  {
+    nameSingular: 'appointment',
+    namePlural: 'appointments',
+    labelSingular: 'Cita',
+    labelPlural: 'Citas',
+    icon: 'IconCalendarEvent',
+    description: 'Cita/visita del lead (punto 6)',
+    fields: [
+      { name: 'modality', label: 'Modalidad', type: FieldMetadataType.SELECT, options: VISIT_MODALITY, isNullable: true },
+      { name: 'room', label: 'Sala', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'meetingUrl', label: 'Enlace reunión', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'startsAt', label: 'Inicio', type: FieldMetadataType.DATE_TIME, isNullable: true },
+      { name: 'endsAt', label: 'Fin', type: FieldMetadataType.DATE_TIME, isNullable: true },
+      { name: 'changeReason', label: 'Motivo de cambio', type: FieldMetadataType.TEXT, isNullable: true },
+    ],
+  },
+  {
+    nameSingular: 'availability',
+    namePlural: 'availabilities',
+    labelSingular: 'Disponibilidad',
+    labelPlural: 'Disponibilidades',
+    icon: 'IconClock',
+    description: 'Franjas de disponibilidad por abogado',
+    fields: [
+      { name: 'weekday', label: 'Día de la semana', type: FieldMetadataType.NUMBER, isNullable: true },
+      { name: 'startTime', label: 'Hora inicio', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'endTime', label: 'Hora fin', type: FieldMetadataType.TEXT, isNullable: true },
+    ],
+  },
+  {
+    nameSingular: 'absence',
+    namePlural: 'absences',
+    labelSingular: 'Ausencia',
+    labelPlural: 'Ausencias',
+    icon: 'IconBeach',
+    description: 'Ausencias y bloqueo de agenda (punto 17C)',
+    fields: [
+      { name: 'absenceType', label: 'Tipo', type: FieldMetadataType.SELECT, options: ABSENCE_TYPE, isNullable: true },
+      { name: 'reason', label: 'Motivo', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'startDate', label: 'Desde', type: FieldMetadataType.DATE_TIME, isNullable: true },
+      { name: 'endDate', label: 'Hasta', type: FieldMetadataType.DATE_TIME, isNullable: true },
+      { name: 'affectedAreas', label: 'Áreas afectadas', type: FieldMetadataType.MULTI_SELECT, options: LEGAL_AREA, isNullable: true },
+    ],
+  },
+  {
+    nameSingular: 'substitution',
+    namePlural: 'substitutions',
+    labelSingular: 'Sustitución',
+    labelPlural: 'Sustituciones',
+    icon: 'IconArrowsExchange',
+    description: 'Transferencia de trabajo al sustituto (punto 17C)',
+    fields: [
+      { name: 'reassignedAt', label: 'Reasignado el', type: FieldMetadataType.DATE_TIME, isNullable: true },
+      { name: 'transferred', label: 'Elementos transferidos', type: FieldMetadataType.RAW_JSON, isNullable: true },
+    ],
+  },
+  {
+    nameSingular: 'notification',
+    namePlural: 'notifications',
+    labelSingular: 'Notificación',
+    labelPlural: 'Notificaciones',
+    icon: 'IconBell',
+    description: 'Notificaciones con escalado (punto 16)',
+    fields: [
+      { name: 'eventName', label: 'Evento', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'channels', label: 'Canales', type: FieldMetadataType.MULTI_SELECT, options: NOTIFICATION_CHANNEL, isNullable: true },
+      { name: 'escalated', label: 'Escalada', type: FieldMetadataType.BOOLEAN, isNullable: true },
+      { name: 'readAt', label: 'Leída el', type: FieldMetadataType.DATE_TIME, isNullable: true },
+      { name: 'payload', label: 'Payload', type: FieldMetadataType.RAW_JSON, isNullable: true },
+    ],
+  },
+  {
+    nameSingular: 'emailTemplate',
+    namePlural: 'emailTemplates',
+    labelSingular: 'Plantilla de email',
+    labelPlural: 'Plantillas de email',
+    icon: 'IconMail',
+    description: 'Plantillas editables (previsita, seguimiento)',
+    fields: [
+      { name: 'area', label: 'Área', type: FieldMetadataType.SELECT, options: LEGAL_AREA, isNullable: true },
+      { name: 'kind', label: 'Tipo', type: FieldMetadataType.SELECT, options: EMAIL_KIND, isNullable: true },
+      { name: 'subject', label: 'Asunto', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'body', label: 'Cuerpo', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'editable', label: 'Editable', type: FieldMetadataType.BOOLEAN, isNullable: true },
+    ],
+  },
+  {
+    nameSingular: 'tariff',
+    namePlural: 'tariffs',
+    labelSingular: 'Tarifario',
+    labelPlural: 'Tarifarios',
+    icon: 'IconReceipt',
+    description: 'Tarifario por área; closed exime de validación (punto 8)',
+    fields: [
+      { name: 'area', label: 'Área', type: FieldMetadataType.SELECT, options: LEGAL_AREA, isNullable: true },
+      { name: 'closed', label: 'Cerrado', type: FieldMetadataType.BOOLEAN, isNullable: true },
+    ],
+  },
+  {
+    nameSingular: 'tariffItem',
+    namePlural: 'tariffItems',
+    labelSingular: 'Concepto de tarifario',
+    labelPlural: 'Conceptos de tarifario',
+    icon: 'IconListNumbers',
+    description: 'Línea de tarifario',
+    fields: [
+      { name: 'concept', label: 'Concepto', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'amount', label: 'Importe', type: FieldMetadataType.CURRENCY, isNullable: true },
+    ],
+  },
+
+  // ── F3: visita, ficha, resultado, IA ────────────────────────────────────
+  {
+    nameSingular: 'clientFile',
+    namePlural: 'clientFiles',
+    labelSingular: 'Ficha de cliente',
+    labelPlural: 'Fichas de cliente',
+    icon: 'IconFileDescription',
+    description: 'Ficha + consentimiento RGPD (punto 7). Guarda dura de grabación',
+    fields: [
+      { name: 'consentSigned', label: 'Consentimiento firmado', type: FieldMetadataType.BOOLEAN, isNullable: true },
+      { name: 'consentText', label: 'Texto de consentimiento', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'signedAt', label: 'Firmado el', type: FieldMetadataType.DATE_TIME, isNullable: true },
+      { name: 'signatureRef', label: 'Referencia de firma', type: FieldMetadataType.TEXT, isNullable: true },
+    ],
+  },
+  {
+    nameSingular: 'documentChecklist',
+    namePlural: 'documentChecklists',
+    labelSingular: 'Checklist de documentación',
+    labelPlural: 'Checklists de documentación',
+    icon: 'IconChecklist',
+    description: 'Checklist de documentación por área/actuación (puntos 4, 13)',
+    fields: [
+      { name: 'area', label: 'Área', type: FieldMetadataType.SELECT, options: LEGAL_AREA, isNullable: true },
+    ],
+  },
+  {
+    nameSingular: 'documentItem',
+    namePlural: 'documentItems',
+    labelSingular: 'Documento requerido',
+    labelPlural: 'Documentos requeridos',
+    icon: 'IconFileCheck',
+    description: 'Línea del checklist de documentación',
+    fields: [
+      { name: 'concept', label: 'Concepto', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'received', label: 'Recibido', type: FieldMetadataType.BOOLEAN, isNullable: true },
+      { name: 'receivedAt', label: 'Recibido el', type: FieldMetadataType.DATE_TIME, isNullable: true },
+    ],
+  },
+  {
+    nameSingular: 'visitTranscription',
+    namePlural: 'visitTranscriptions',
+    labelSingular: 'Transcripción de visita',
+    labelPlural: 'Transcripciones de visita',
+    icon: 'IconFileText',
+    description: 'Transcripción + resumen (nunca el vídeo)',
+    fields: [
+      { name: 'source', label: 'Origen', type: FieldMetadataType.SELECT, options: TRANSCRIPTION_SOURCE, isNullable: true },
+      { name: 'transcript', label: 'Transcripción', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'summary', label: 'Resumen', type: FieldMetadataType.TEXT, isNullable: true },
+    ],
+  },
+  {
+    nameSingular: 'visitOutcome',
+    namePlural: 'visitOutcomes',
+    labelSingular: 'Resultado de visita',
+    labelPlural: 'Resultados de visita',
+    icon: 'IconChecks',
+    description: 'Resultado de la visita, 5 escenarios',
+    fields: [
+      { name: 'result', label: 'Resultado', type: FieldMetadataType.SELECT, options: VISIT_RESULT, isNullable: true },
+      { name: 'cierreCausa', label: 'Causa de cierre', type: FieldMetadataType.SELECT, options: CIERRE_CAUSA, isNullable: true },
+      { name: 'notes', label: 'Notas', type: FieldMetadataType.TEXT, isNullable: true },
+    ],
+  },
+  {
+    nameSingular: 'aiConversation',
+    namePlural: 'aiConversations',
+    labelSingular: 'Conversación IA',
+    labelPlural: 'Conversaciones IA',
+    icon: 'IconMessageChatbot',
+    description: 'Módulo IA por lead (Q&A, resumen, borradores)',
+    fields: [
+      { name: 'topic', label: 'Tema', type: FieldMetadataType.TEXT, isNullable: true },
+    ],
+  },
+  {
+    nameSingular: 'aiMessage',
+    namePlural: 'aiMessages',
+    labelSingular: 'Mensaje IA',
+    labelPlural: 'Mensajes IA',
+    icon: 'IconMessage',
+    description: 'Mensaje de una conversación IA',
+    fields: [
+      { name: 'messageRole', label: 'Rol', type: FieldMetadataType.SELECT, options: AI_ROLE, isNullable: true },
+      { name: 'content', label: 'Contenido', type: FieldMetadataType.TEXT, isNullable: true },
+    ],
+  },
+
+  // ── F4: presupuestos ────────────────────────────────────────────────────
+  {
+    nameSingular: 'budget',
+    namePlural: 'budgets',
+    labelSingular: 'Presupuesto',
+    labelPlural: 'Presupuestos',
+    icon: 'IconFileInvoice',
+    description: 'Presupuesto con circuito de validación (puntos 8, 14)',
+    fields: [
+      { name: 'budgetNumber', label: 'Número', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'area', label: 'Área', type: FieldMetadataType.SELECT, options: LEGAL_AREA, isNullable: true },
+      { name: 'description', label: 'Descripción', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'scopeIncluded', label: 'Alcance incluido', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'scopeExcluded', label: 'Alcance excluido', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'feeType', label: 'Tipo de honorarios', type: FieldMetadataType.SELECT, options: FEE_TYPE, isNullable: true },
+      { name: 'amount', label: 'Importe', type: FieldMetadataType.CURRENCY, isNullable: true },
+      { name: 'vat', label: 'IVA', type: FieldMetadataType.NUMBER, isNullable: true },
+      { name: 'paymentTerms', label: 'Condiciones de pago', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'validUntil', label: 'Válido hasta', type: FieldMetadataType.DATE_TIME, isNullable: true },
+      { name: 'status', label: 'Estado', type: FieldMetadataType.SELECT, options: BUDGET_STATUS, isNullable: true },
+      { name: 'requiresValidation', label: 'Requiere validación', type: FieldMetadataType.BOOLEAN, isNullable: true },
+      { name: 'generalConditionsVersion', label: 'Versión condiciones', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'signatureRef', label: 'Referencia de firma', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'signedAt', label: 'Firmado el', type: FieldMetadataType.DATE_TIME, isNullable: true },
+    ],
+  },
+  {
+    nameSingular: 'budgetValidation',
+    namePlural: 'budgetValidations',
+    labelSingular: 'Validación de presupuesto',
+    labelPlural: 'Validaciones de presupuesto',
+    icon: 'IconShieldCheck',
+    description: 'Circuito de validación por área (guarda dura de envío)',
+    fields: [
+      { name: 'approved', label: 'Aprobado', type: FieldMetadataType.BOOLEAN, isNullable: true },
+      { name: 'lowAmountAlert', label: 'Alerta importe bajo', type: FieldMetadataType.BOOLEAN, isNullable: true },
+      { name: 'comment', label: 'Comentario', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'decidedAt', label: 'Decidido el', type: FieldMetadataType.DATE_TIME, isNullable: true },
+    ],
+  },
+  {
+    nameSingular: 'generalConditions',
+    namePlural: 'generalConditionsList',
+    labelSingular: 'Condiciones generales',
+    labelPlural: 'Condiciones generales',
+    icon: 'IconFileText',
+    description: 'Condiciones generales versionadas del presupuesto',
+    fields: [
+      { name: 'version', label: 'Versión', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'body', label: 'Texto', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'active', label: 'Activa', type: FieldMetadataType.BOOLEAN, isNullable: true },
+    ],
+  },
+
+  // ── F5: seguimiento, conversión, métricas ───────────────────────────────
+  {
+    nameSingular: 'followUp',
+    namePlural: 'followUps',
+    labelSingular: 'Seguimiento',
+    labelPlural: 'Seguimientos',
+    icon: 'IconPhoneCall',
+    description: 'Intento de seguimiento post-visita (punto 10)',
+    fields: [
+      { name: 'kind', label: 'Tipo', type: FieldMetadataType.SELECT, options: FOLLOWUP_KIND, isNullable: true },
+      { name: 'outcome', label: 'Resultado', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'notes', label: 'Notas', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'scheduledAt', label: 'Programado para', type: FieldMetadataType.DATE_TIME, isNullable: true },
+    ],
+  },
+  {
+    nameSingular: 'leadLoss',
+    namePlural: 'leadLosses',
+    labelSingular: 'Pérdida de lead',
+    labelPlural: 'Pérdidas de lead',
+    icon: 'IconThumbDown',
+    description: 'Motivo obligatorio al perder (punto 17E)',
+    fields: [
+      { name: 'reason', label: 'Motivo', type: FieldMetadataType.SELECT, options: LOSS_REASON, isNullable: true },
+      { name: 'otherText', label: 'Otro (texto)', type: FieldMetadataType.TEXT, isNullable: true },
+    ],
+  },
+  {
+    nameSingular: 'metric',
+    namePlural: 'metrics',
+    labelSingular: 'Métrica',
+    labelPlural: 'Métricas',
+    icon: 'IconChartBar',
+    description: 'Métricas por usuario (base de gamificación)',
+    fields: [
+      { name: 'metricKey', label: 'Indicador', type: FieldMetadataType.SELECT, options: METRIC_KEY, isNullable: true },
+    ],
+  },
+  {
+    nameSingular: 'metricSnapshot',
+    namePlural: 'metricSnapshots',
+    labelSingular: 'Snapshot de métrica',
+    labelPlural: 'Snapshots de métrica',
+    icon: 'IconChartLine',
+    description: 'Valor de métrica por periodo',
+    fields: [
+      { name: 'period', label: 'Periodo', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'snapshotValue', label: 'Valor', type: FieldMetadataType.NUMBER, isNullable: true },
     ],
   },
 ];
