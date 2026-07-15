@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 
+import { AuditCaptureBeforePreQueryHook } from 'src/modules/kernel-legal/query-hooks/audit-capture-before.pre-query.hook';
 import {
   AuditLogCreatePostQueryHook,
   AuditLogDeletePostQueryHook,
@@ -34,6 +35,7 @@ import {
     FacturaNumberPreQueryHook,
     BudgetAcceptedOpensExpedientePostQueryHook,
     FacturaPaidWhenSettledPostQueryHook,
+    AuditCaptureBeforePreQueryHook,
     AuditLogCreatePostQueryHook,
     AuditLogUpdatePostQueryHook,
     AuditLogDeletePostQueryHook,

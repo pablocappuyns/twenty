@@ -9,6 +9,7 @@ import { WorkspaceQueryHookType } from 'src/engine/api/graphql/workspace-query-r
 import { type WorkspaceAuthContext } from 'src/engine/core-modules/auth/types/workspace-auth-context.type';
 import { GlobalWorkspaceOrmManager } from 'src/engine/twenty-orm/global-workspace-datasource/global-workspace-orm.manager';
 import { KERNEL_LEGAL_AUDITED_OBJECTS } from 'src/modules/kernel-legal/constants/audited-objects.constant';
+import { recallAuditBefore } from 'src/modules/kernel-legal/query-hooks/audit-before-store';
 
 type AuditableRecord = ObjectLiteral & { id?: string | null };
 
@@ -46,8 +47,8 @@ const toSnapshot = (record: AuditableRecord): AuditableRecord => {
 };
 
 // Escritor compartido: registra una entrada de auditoría por cada registro
-// afectado. beforeValue en updateOne queda pendiente (requiere captura pre-write);
-// hoy se registra el estado resultante (create/update) o el borrado (delete).
+// afectado. beforeValue en updateOne lo captura el PRE_HOOK de auditoría; en
+// delete el before es el propio registro borrado.
 const writeAudit = async (
   globalWorkspaceOrmManager: GlobalWorkspaceOrmManager,
   authContext: WorkspaceAuthContext,
@@ -139,13 +140,19 @@ export class AuditLogUpdatePostQueryHook implements WorkspacePostQueryHookInstan
       authContext,
       objectName,
       payload,
-      (record) => ({
-        action: 'UPDATE',
-        entityId: record.id as string,
-        beforeValue: null,
-        afterValue: toSnapshot(record),
-        actorId: actorIdFromContext(authContext),
-      }),
+      (record) => {
+        const before = recallAuditBefore(`${objectName}:${record.id}`);
+
+        return {
+          action: 'UPDATE',
+          entityId: record.id as string,
+          beforeValue: isDefined(before)
+            ? toSnapshot(before as AuditableRecord)
+            : null,
+          afterValue: toSnapshot(record),
+          actorId: actorIdFromContext(authContext),
+        };
+      },
     );
   }
 }
