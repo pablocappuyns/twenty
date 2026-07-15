@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 
 import { BudgetAcceptedOpensExpedientePostQueryHook } from 'src/modules/kernel-legal/query-hooks/budget-accepted-opens-expediente.post-query.hook';
 import { BudgetValidationRequiredPreQueryHook } from 'src/modules/kernel-legal/query-hooks/budget-validation-required.pre-query.hook';
+import { FacturaPaidWhenSettledPostQueryHook } from 'src/modules/kernel-legal/query-hooks/factura-paid-when-settled.post-query.hook';
 import { LeadLossReasonRequiredPreQueryHook } from 'src/modules/kernel-legal/query-hooks/lead-loss-reason-required.pre-query.hook';
 import {
   LeadScoringCreatePreQueryHook,
@@ -27,6 +28,7 @@ import {
     ExpedienteNumberPreQueryHook,
     FacturaNumberPreQueryHook,
     BudgetAcceptedOpensExpedientePostQueryHook,
+    FacturaPaidWhenSettledPostQueryHook,
   ],
 })
 export class KernelLegalQueryHookModule {}
