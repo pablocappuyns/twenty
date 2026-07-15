@@ -5,7 +5,10 @@ import { isDefined } from 'twenty-shared/utils';
 
 import { FieldMetadataService } from 'src/engine/metadata-modules/field-metadata/services/field-metadata.service';
 import { ObjectMetadataService } from 'src/engine/metadata-modules/object-metadata/object-metadata.service';
-import { KERNEL_LEGAL_OBJECTS } from 'src/modules/kernel-legal/constants/legal-model.constant';
+import {
+  KERNEL_LEGAL_OBJECTS,
+  type LegalObjectDefinition,
+} from 'src/modules/kernel-legal/constants/legal-model.constant';
 import { KERNEL_LEGAL_RELATIONS } from 'src/modules/kernel-legal/constants/legal-relations.constant';
 
 @Injectable()
@@ -52,18 +55,21 @@ export class KernelLegalSeederService {
         continue;
       }
 
-      const existingFieldNames = new Set(
-        (object.fields ?? []).map((field) => field.name),
+      const existingFieldByName = new Map(
+        (object.fields ?? []).map((field) => [field.name, field]),
+      );
+
+      await this.reconcileFieldOptions(
+        objectDefinition,
+        existingFieldByName,
+        workspaceId,
       );
 
       const fieldsToCreate = objectDefinition.fields.filter(
-        (field) => !existingFieldNames.has(field.name),
+        (field) => !existingFieldByName.has(field.name),
       );
 
       if (fieldsToCreate.length === 0) {
-        this.logger.log(
-          `Object "${objectDefinition.nameSingular}" already has all fields`,
-        );
         continue;
       }
 
@@ -93,6 +99,75 @@ export class KernelLegalSeederService {
     await this.seedRelations(workspaceId);
 
     this.logger.log('Kernel Legal data model seeding finished');
+  }
+
+  // Los campos SELECT/MULTI_SELECT creados antes de ampliar el enum (p.ej. el
+  // status del lead creado a mano en la UI con 2 opciones) se quedan atrás. Aquí
+  // se añaden las opciones que falten conservando las existentes y sus ids.
+  private async reconcileFieldOptions(
+    objectDefinition: LegalObjectDefinition,
+    existingFieldByName: Map<string, { id: string; options?: unknown }>,
+    workspaceId: string,
+  ): Promise<void> {
+    for (const field of objectDefinition.fields) {
+      const definedOptions = field.options;
+
+      if (!isDefined(definedOptions) || definedOptions.length === 0) {
+        continue;
+      }
+
+      const existingField = existingFieldByName.get(field.name);
+
+      if (!isDefined(existingField)) {
+        continue;
+      }
+
+      const existingOptions = (existingField.options ?? []) as {
+        id?: string;
+        value: string;
+        label: string;
+        color: string;
+        position: number;
+      }[];
+      const existingValues = new Set(existingOptions.map((o) => o.value));
+      const missingOptions = definedOptions.filter(
+        (o) => !existingValues.has(o.value),
+      );
+
+      if (missingOptions.length === 0) {
+        continue;
+      }
+
+      const mergedOptions = [
+        ...existingOptions.map((o) => ({
+          id: o.id,
+          value: o.value,
+          label: o.label,
+          color: o.color,
+          position: o.position,
+        })),
+        ...missingOptions.map((o, index) => ({
+          value: o.value,
+          label: o.label,
+          color: o.color,
+          position: existingOptions.length + index,
+        })),
+      ];
+
+      await this.fieldMetadataService.updateOneField({
+        updateFieldInput: {
+          id: existingField.id,
+          options: mergedOptions,
+        } as Parameters<
+          FieldMetadataService['updateOneField']
+        >[0]['updateFieldInput'],
+        workspaceId,
+      });
+
+      this.logger.log(
+        `Reconciled ${missingOptions.length} option(s) on "${objectDefinition.nameSingular}.${field.name}"`,
+      );
+    }
   }
 
   private async seedRelations(workspaceId: string): Promise<void> {
