@@ -1,5 +1,10 @@
 import { Module } from '@nestjs/common';
 
+import {
+  AuditLogCreatePostQueryHook,
+  AuditLogDeletePostQueryHook,
+  AuditLogUpdatePostQueryHook,
+} from 'src/modules/kernel-legal/query-hooks/audit-log.post-query.hook';
 import { BudgetAcceptedOpensExpedientePostQueryHook } from 'src/modules/kernel-legal/query-hooks/budget-accepted-opens-expediente.post-query.hook';
 import { BudgetValidationRequiredPreQueryHook } from 'src/modules/kernel-legal/query-hooks/budget-validation-required.pre-query.hook';
 import { FacturaPaidWhenSettledPostQueryHook } from 'src/modules/kernel-legal/query-hooks/factura-paid-when-settled.post-query.hook';
@@ -29,6 +34,9 @@ import {
     FacturaNumberPreQueryHook,
     BudgetAcceptedOpensExpedientePostQueryHook,
     FacturaPaidWhenSettledPostQueryHook,
+    AuditLogCreatePostQueryHook,
+    AuditLogUpdatePostQueryHook,
+    AuditLogDeletePostQueryHook,
   ],
 })
 export class KernelLegalQueryHookModule {}
