@@ -176,6 +176,40 @@ const METRIC_KEY = options([
   'LEADS_POR_CANAL',
 ]);
 
+const CALL_DIRECTION = options(['IN', 'OUT']);
+
+const SYNC_SYSTEM = options(['KMALEON', 'CENTRALITA', 'M365']);
+
+const SYNC_DIRECTION = options(['INBOUND', 'OUTBOUND']);
+
+const SYNC_STATUS = options(['OK', 'ERROR', 'PENDING']);
+
+const EXPEDIENTE_STATUS = options([
+  'ACTIVO',
+  'SUSPENDIDO',
+  'ARCHIVADO',
+  'CERRADO',
+]);
+
+const FACTURA_STATUS = options([
+  'BORRADOR',
+  'ENVIADA',
+  'PAGADA',
+  'VENCIDA',
+  'ANULADA',
+]);
+
+const PAGO_METHOD = options(['TRANSFERENCIA', 'TARJETA', 'EFECTIVO', 'BIZUM']);
+
+const PAGO_LEGALITAS_STATUS = options([
+  'PENDIENTE_RECONOCIMIENTO',
+  'PRUEBA_APORTADA',
+  'RECLAMACION_ENVIADA',
+  'RESPUESTA_PENDIENTE',
+  'REGULARIZADO',
+  'INCIDENCIA_CERRADA',
+]);
+
 export const KERNEL_LEGAL_OBJECTS: LegalObjectDefinition[] = [
   {
     nameSingular: 'appConfig',
@@ -605,6 +639,154 @@ export const KERNEL_LEGAL_OBJECTS: LegalObjectDefinition[] = [
     fields: [
       { name: 'period', label: 'Periodo', type: FieldMetadataType.TEXT, isNullable: true },
       { name: 'snapshotValue', label: 'Valor', type: FieldMetadataType.NUMBER, isNullable: true },
+    ],
+  },
+
+  // ── F7: integraciones y fidelización ────────────────────────────────────
+  {
+    nameSingular: 'referral',
+    namePlural: 'referrals',
+    labelSingular: 'Referido',
+    labelPlural: 'Referidos',
+    icon: 'IconShare',
+    description: 'Lead aportado por un referente (punto 9)',
+    fields: [
+      { name: 'notes', label: 'Notas', type: FieldMetadataType.TEXT, isNullable: true },
+    ],
+  },
+  {
+    nameSingular: 'callLog',
+    namePlural: 'callLogs',
+    labelSingular: 'Registro de llamada',
+    labelPlural: 'Registros de llamada',
+    icon: 'IconPhone',
+    description: 'Llamada registrada por la centralita (punto 6)',
+    fields: [
+      { name: 'direction', label: 'Sentido', type: FieldMetadataType.SELECT, options: CALL_DIRECTION, isNullable: true },
+      { name: 'durationSec', label: 'Duración (s)', type: FieldMetadataType.NUMBER, isNullable: true },
+      { name: 'outcome', label: 'Resultado', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'externalId', label: 'ID externo', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'callerPhone', label: 'Teléfono llamante', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'agentPhone', label: 'Teléfono agente', type: FieldMetadataType.TEXT, isNullable: true },
+    ],
+  },
+  {
+    nameSingular: 'externalSyncLog',
+    namePlural: 'externalSyncLogs',
+    labelSingular: 'Log de sincronización',
+    labelPlural: 'Logs de sincronización',
+    icon: 'IconRefresh',
+    description: 'Sincronización con Kmaleon / centralita / M365 (punto 17F)',
+    fields: [
+      { name: 'system', label: 'Sistema', type: FieldMetadataType.SELECT, options: SYNC_SYSTEM, isNullable: true },
+      { name: 'entityType', label: 'Tipo de entidad', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'entityId', label: 'ID de entidad', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'direction', label: 'Sentido', type: FieldMetadataType.SELECT, options: SYNC_DIRECTION, isNullable: true },
+      { name: 'syncStatus', label: 'Estado', type: FieldMetadataType.SELECT, options: SYNC_STATUS, isNullable: true },
+      { name: 'payload', label: 'Payload', type: FieldMetadataType.RAW_JSON, isNullable: true },
+      { name: 'errorMessage', label: 'Error', type: FieldMetadataType.TEXT, isNullable: true },
+    ],
+  },
+  {
+    nameSingular: 'satisfactionSurvey',
+    namePlural: 'satisfactionSurveys',
+    labelSingular: 'Encuesta de satisfacción',
+    labelPlural: 'Encuestas de satisfacción',
+    icon: 'IconMoodSmile',
+    description: 'Encuesta al cierre del expediente (punto 11)',
+    fields: [
+      { name: 'token', label: 'Token', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'sentAt', label: 'Enviada el', type: FieldMetadataType.DATE_TIME, isNullable: true },
+      { name: 'surveyScore', label: 'Puntuación', type: FieldMetadataType.NUMBER, isNullable: true },
+      { name: 'feedback', label: 'Comentarios', type: FieldMetadataType.TEXT, isNullable: true },
+    ],
+  },
+
+  // ── F8: expediente (gestionado por el CRM) ──────────────────────────────
+  {
+    nameSingular: 'expediente',
+    namePlural: 'expedientes',
+    labelSingular: 'Expediente',
+    labelPlural: 'Expedientes',
+    icon: 'IconFolder',
+    description: 'Expediente jurídico gestionado por el CRM',
+    fields: [
+      { name: 'expedienteNumber', label: 'Número', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'area', label: 'Área', type: FieldMetadataType.SELECT, options: LEGAL_AREA, isNullable: true },
+      { name: 'title', label: 'Título', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'expedienteStatus', label: 'Estado', type: FieldMetadataType.SELECT, options: EXPEDIENTE_STATUS, isNullable: true },
+      { name: 'kmaleonRef', label: 'Referencia Kmaleon', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'notes', label: 'Notas', type: FieldMetadataType.TEXT, isNullable: true },
+    ],
+  },
+  {
+    nameSingular: 'expedienteStage',
+    namePlural: 'expedienteStages',
+    labelSingular: 'Etapa de expediente',
+    labelPlural: 'Etapas de expediente',
+    icon: 'IconListCheck',
+    description: 'Etapa/hito del expediente con plazo',
+    fields: [
+      { name: 'title', label: 'Título', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'description', label: 'Descripción', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'dueAt', label: 'Vence el', type: FieldMetadataType.DATE_TIME, isNullable: true },
+      { name: 'completedAt', label: 'Completada el', type: FieldMetadataType.DATE_TIME, isNullable: true },
+      { name: 'position', label: 'Orden', type: FieldMetadataType.NUMBER, isNullable: true },
+    ],
+  },
+
+  // ── F9: facturación (gestionada por el CRM) ─────────────────────────────
+  {
+    nameSingular: 'factura',
+    namePlural: 'facturas',
+    labelSingular: 'Factura',
+    labelPlural: 'Facturas',
+    icon: 'IconFileEuro',
+    description: 'Factura del expediente con seguimiento de cobro',
+    fields: [
+      { name: 'facturaNumber', label: 'Número', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'concept', label: 'Concepto', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'amount', label: 'Base', type: FieldMetadataType.CURRENCY, isNullable: true },
+      { name: 'vat', label: 'IVA', type: FieldMetadataType.NUMBER, isNullable: true },
+      { name: 'total', label: 'Total', type: FieldMetadataType.CURRENCY, isNullable: true },
+      { name: 'facturaStatus', label: 'Estado', type: FieldMetadataType.SELECT, options: FACTURA_STATUS, isNullable: true },
+      { name: 'issuedAt', label: 'Emitida el', type: FieldMetadataType.DATE_TIME, isNullable: true },
+      { name: 'dueAt', label: 'Vence el', type: FieldMetadataType.DATE_TIME, isNullable: true },
+      { name: 'notes', label: 'Notas', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'isLegalitas', label: 'Es Legalitas', type: FieldMetadataType.BOOLEAN, isNullable: true },
+    ],
+  },
+  {
+    nameSingular: 'facturaPago',
+    namePlural: 'facturaPagos',
+    labelSingular: 'Pago de factura',
+    labelPlural: 'Pagos de factura',
+    icon: 'IconCash',
+    description: 'Pago (parcial) de una factura',
+    fields: [
+      { name: 'amount', label: 'Importe', type: FieldMetadataType.CURRENCY, isNullable: true },
+      { name: 'method', label: 'Método', type: FieldMetadataType.SELECT, options: PAGO_METHOD, isNullable: true },
+      { name: 'paidAt', label: 'Pagado el', type: FieldMetadataType.DATE_TIME, isNullable: true },
+      { name: 'notes', label: 'Notas', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'legalitasStatus', label: 'Estado Legalitas', type: FieldMetadataType.SELECT, options: PAGO_LEGALITAS_STATUS, isNullable: true },
+      { name: 'proofUrl', label: 'Justificante', type: FieldMetadataType.TEXT, isNullable: true },
+    ],
+  },
+
+  // ── F14: documentos ─────────────────────────────────────────────────────
+  {
+    nameSingular: 'documento',
+    namePlural: 'documentos',
+    labelSingular: 'Documento',
+    labelPlural: 'Documentos',
+    icon: 'IconFile',
+    description: 'Documento del expediente con versionado',
+    fields: [
+      { name: 'documentName', label: 'Nombre', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'url', label: 'URL', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'fileSize', label: 'Tamaño', type: FieldMetadataType.NUMBER, isNullable: true },
+      { name: 'mimeType', label: 'Tipo MIME', type: FieldMetadataType.TEXT, isNullable: true },
+      { name: 'docVersion', label: 'Versión', type: FieldMetadataType.NUMBER, isNullable: true },
     ],
   },
 ];

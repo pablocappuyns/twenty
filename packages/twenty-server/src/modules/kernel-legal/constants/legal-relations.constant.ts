@@ -88,4 +88,24 @@ export const KERNEL_LEGAL_RELATIONS: LegalRelationDefinition[] = [
 
   // Referidos
   manyToOne('referrer', 'client', 'Cliente referente', 'IconUser', 'person', 'Referencias', 'IconUserShare'),
+
+  // F7: integraciones y fidelización
+  manyToOne('callLog', 'lead', 'Lead', 'IconTargetArrow', 'lead', 'Llamadas', 'IconPhone'),
+  manyToOne('satisfactionSurvey', 'lead', 'Lead', 'IconTargetArrow', 'lead', 'Encuestas', 'IconMoodSmile'),
+  manyToOne('referral', 'referrer', 'Referente', 'IconUserShare', 'referrer', 'Referencias', 'IconShare'),
+  manyToOne('referral', 'lead', 'Lead', 'IconTargetArrow', 'lead', 'Referencia recibida', 'IconShare'),
+  manyToOne('referral', 'clientReferrer', 'Cliente referente', 'IconUser', 'person', 'Referidos aportados', 'IconShare'),
+
+  // F8: expediente
+  manyToOne('expediente', 'lead', 'Lead', 'IconTargetArrow', 'lead', 'Expediente', 'IconFolder'),
+  manyToOne('expediente', 'assignedLawyer', 'Abogado responsable', 'IconGavel', 'workspaceMember', 'Expedientes asignados', 'IconFolder'),
+  manyToOne('expedienteStage', 'expediente', 'Expediente', 'IconFolder', 'expediente', 'Etapas', 'IconListCheck'),
+
+  // F9: facturación
+  manyToOne('factura', 'expediente', 'Expediente', 'IconFolder', 'expediente', 'Facturas', 'IconFileEuro'),
+  manyToOne('facturaPago', 'factura', 'Factura', 'IconFileEuro', 'factura', 'Pagos', 'IconCash'),
+
+  // F14: documentos
+  manyToOne('documento', 'expediente', 'Expediente', 'IconFolder', 'expediente', 'Documentos', 'IconFile'),
+  manyToOne('documento', 'uploadedByMember', 'Subido por', 'IconUser', 'workspaceMember', 'Documentos subidos', 'IconFile'),
 ];
